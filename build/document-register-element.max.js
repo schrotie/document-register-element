@@ -1246,7 +1246,7 @@ PERFORMANCE OF THIS SOFTWARE.
       i = getTypeIndex(node),
       counterAction
     ;
-    if (-1 < i) {
+    if ((-1 < i) && !isInTemplate(node)) {
       patchIfNotAlready(node, protos[i]);
       i = 0;
       if (action === ATTACHED && !node[ATTACHED]) {
@@ -1270,6 +1270,35 @@ PERFORMANCE OF THIS SOFTWARE.
     }
   }
   
+  var isInTemplate = (
+    HTMLElementPrototype.matches ?
+  		function(node) {return node.matches(          'template *') || isTemplateContent(node)} : (
+    HTMLElementPrototype.msMatchesSelector ?
+  		function(node) {return node.msMatchesSelector('template *') || isTemplateContent(node)} :
+  	function(node) {
+  		return isTemplateContent(node) || (
+  			function recurseIsInTemplate(element) {
+  			 	 return element && (
+  			 		 (element.nodeName === 'TEMPLATE') ||
+  			 		 recurseIsInTemplate(element.parentElement)
+  			 	 );
+   		 	}
+  		)(node);
+  	}
+  ));
+  
+  function isTemplateContent(node) {
+  	var templates = document.querySelectorAll('template');
+  	var contents = [];
+  	for(var i = 0; i < templates.length; i++) {
+  		var content = templates[i].content;
+  		if(content) contents.push(content);
+  	}
+  	var hostNode = (function host(element) {
+  		return element.parentNode ? host(element.parentNode) : element;
+  	})(node);
+  	return contents.indexOf(hostNode) !== -1;
+  }
   
   
   // V1 in da House!

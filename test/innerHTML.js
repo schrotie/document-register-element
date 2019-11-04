@@ -166,5 +166,23 @@ wru.test(typeof document === 'undefined' ? [] : [
         wru.assert('right order', order.join(',') === 'createdCallback,attachedCallback');
       }), 250);
     }
+  }, {
+    name: 'innerHTML does not invoke createdCallback via type in template',
+    test: function () {
+		 var created = false;
+      customElements.define('in-template', class extends HTMLElement {
+			constructor() {
+				created = true;
+				console.error('CREATED', arguments.caller)
+			}
+      });
+      var div = innerHTML(
+        document.createElement('div'),
+        '<template><in-template></in-template></template>'
+      );
+      setTimeout(wru.async(function () {
+        wru.assert('created', created === false);
+      }), 250);
+    }
   }
 ]);
